@@ -61,7 +61,7 @@ impl DsState {
 }
 
 /// Represents the current Mode that the robot is in. the `Mode` of the robot is considered separately from whether it is enabled or not
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Mode {
     Autonomous,
     Teleoperated,

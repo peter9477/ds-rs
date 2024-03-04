@@ -4,6 +4,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 pub enum TcpTag {
     MatchInfo(MatchInfo),
     GameData(GameData),
+    JoystickDesc(JoystickDesc),
 }
 
 pub(crate) trait OutgoingTcpTag {
@@ -71,4 +72,20 @@ pub enum MatchType {
     Practice = 1,
     Qualifications = 2,
     Eliminations = 3,
+}
+
+#[derive(Debug, Clone)]
+pub struct JoystickDesc;
+
+impl OutgoingTcpTag for JoystickDesc {
+    fn id(&self) -> u8 {
+        0x02
+    }
+
+    fn data(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&[0, 0, 21, 3, b'P', b'S', b'4', 6, 0, 1, 2, 3, 4, 5, 10, 1]);
+
+        buf
+    }
 }

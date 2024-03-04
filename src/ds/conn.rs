@@ -65,6 +65,7 @@ pub(crate) async fn udp_conn(
         loop {
             let item = stream.next().await.unwrap();
             match item {
+                // Action every 20ms interval.
                 Either::Left(_) => {
                     let mut state = send_state.send().lock().await;
                     let v = state.control().encode();
@@ -82,6 +83,7 @@ pub(crate) async fn udp_conn(
                     }
                     state.increment_seqnum();
                 }
+                // Action on signal from main task on UDP receive?
                 Either::Right(sig) => match sig {
                     Signal::NewTarget(ip) => {
                         let mut state = send_state.send().lock().await;
@@ -121,7 +123,8 @@ pub(crate) async fn udp_conn(
     let fut = tokio::stream::StreamExt::timeout(udp_rx, Duration::from_secs(2)).map(Either::Left);
     let mut stream = select(fut, rx.map(Either::Right));
 
-    let mut connected = true;
+    // Main loop, watching incoming UDP packets from RIO.
+    let mut connected = false;
     while let Some(item) = stream.next().await {
         match item {
             Either::Left(packet) => match packet {
@@ -139,9 +142,9 @@ pub(crate) async fn udp_conn(
                             let second = local.time().second() as u8;
                             let minute = local.time().minute() as u8;
                             let hour = local.time().hour() as u8;
-                            let day = local.date().day() as u8;
-                            let month = local.date().month0() as u8;
-                            let year = (local.date().year() - 1900) as u8;
+                            let day = local.date_naive().day() as u8;
+                            let month = local.date_naive().month0() as u8;
+                            let year = (local.date_naive().year() - 1900) as u8;
                             let tag = DTTag::new(micros, second, minute, hour, day, month, year);
                             state.send().lock().await.queue_udp(UdpTag::DateTime(tag));
                         }
@@ -172,12 +175,13 @@ pub(crate) async fn udp_conn(
                 },
                 Err(_) => {
                     if connected {
-                        println!("RIO disconnected");
+                        // println!("RIO disconnected");
                         state.recv().lock().await.reset();
                         connected = false;
                     }
                 }
             },
+            // Internal signal to request various messages be sent.
             Either::Right(sig) => match sig {
                 Signal::Disconnect => return Ok(()),
                 Signal::NewTarget(ref target) => {

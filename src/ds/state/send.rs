@@ -78,6 +78,14 @@ impl SendState {
                 let mut buttons = vec![false; 10];
                 let mut povs = vec![-1i16];
 
+                // This has various flaws including the fixed-size vecs,
+                // the use of remove/insert instead of just modifying the entries,
+                // the fact it will panic if you try to use ids beyond the
+                // entries here, and the fact it will always generate a
+                // packet even if there are no changes in the data since last
+                // time (that the last one's a problem is just a theory for now...
+                // but it really shouldn't be necessary to send this data
+                // in every single packet if it has not changed).
                 for value in joystick {
                     // If statements bound check to stop it from crashing
                     match value {

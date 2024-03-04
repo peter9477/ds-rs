@@ -206,6 +206,8 @@ pub enum JoystickValue {
     /// Represents an axis value to be sent to the roboRIO
     ///
     /// `value` should range from `-1.0..=1.0`, or `0.0..=1.0` if the axis is a trigger
+    // If the source data is a u8, which it is with hidapi, then converting to
+    // an f32 just so it can be converted back to a u8 for the packet makes no sense.
     Axis { id: u8, value: f32 },
     /// Represents a button value to be sent to the roboRIO
     Button { id: u8, pressed: bool },

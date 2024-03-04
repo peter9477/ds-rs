@@ -21,6 +21,7 @@ impl Encoder for DsTcpCodec {
                 dst.extend(gd.construct().iter());
             }
             TcpTag::MatchInfo(mi) => dst.extend(mi.construct().iter()),
+            TcpTag::JoystickDesc(jd) => dst.extend(jd.construct().iter()),
         }
         Ok(())
     }

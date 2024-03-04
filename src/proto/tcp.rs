@@ -1,3 +1,5 @@
+// use log::*;
+
 use crate::ext::BufExt;
 use crate::proto::tcp::outbound::{OutgoingTcpTag, TcpTag};
 use crate::{Stdout, TcpPacket};
@@ -38,6 +40,8 @@ impl Decoder for DsTcpCodec {
             let len = buf.read_u16_be()?;
 
             let id = buf.read_u8()?;
+
+            // debug!("TCP {} n={} {}", id, len, hex::encode(buf.bytes()));
             match id {
                 0x0c => Ok((
                     TcpPacket::Stdout(Stdout::decode(buf, len as usize - 1)?),

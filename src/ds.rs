@@ -206,6 +206,7 @@ pub enum JoystickValue {
     /// Represents an axis value to be sent to the roboRIO
     ///
     /// `value` should range from `-1.0..=1.0`, or `0.0..=1.0` if the axis is a trigger
+
     // If the source data is a u8, which it is with hidapi, then converting to
     // an f32 just so it can be converted back to a u8 for the packet makes no sense.
     Axis { id: u8, value: f32 },
@@ -213,37 +214,6 @@ pub enum JoystickValue {
     Button { id: u8, pressed: bool },
     /// Represents a POV, or D-pad value to be sent to the roboRIO
     POV { id: u8, angle: i16 },
-}
-
-impl JoystickValue {
-    pub fn id(self) -> u8 {
-        match self {
-            JoystickValue::Axis { id, .. } => id,
-            JoystickValue::Button { id, .. } => id,
-            JoystickValue::POV { id, .. } => id,
-        }
-    }
-
-    pub fn is_axis(self) -> bool {
-        match self {
-            JoystickValue::Axis { .. } => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_button(self) -> bool {
-        match self {
-            JoystickValue::Button { .. } => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_pov(self) -> bool {
-        match self {
-            JoystickValue::POV { .. } => true,
-            _ => false,
-        }
-    }
 }
 
 impl Drop for DriverStation {

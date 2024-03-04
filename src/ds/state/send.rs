@@ -1,3 +1,5 @@
+use log::*;
+
 use crate::ds::state::{DsMode, JoystickSupplier};
 use crate::proto::udp::outbound::types::tags::*;
 use crate::proto::udp::outbound::types::{Control, Request};
@@ -116,7 +118,10 @@ impl SendState {
                         }
                     }
                 }
-                self.queue_udp(UdpTag::Joysticks(Joysticks::new(axes, buttons, povs)));
+
+                let tag = Joysticks::new(axes, buttons, povs);
+                // debug!("{}", hex::encode(tag.data()));
+                self.queue_udp(UdpTag::Joysticks(tag));
             }
         }
 

@@ -47,5 +47,11 @@ macro_rules! gen_trace_methods {
     }
 }
 
-gen_trace_methods!(is_autonomous => Trace::AUTONOMOUS, is_teleop => Trace::TELEOP, is_disabled => Trace::DISABLED,
-                   is_test => Trace::TEST_MODE, is_code_started => Trace::ROBOT_CODE, is_connected => Trace::IS_ROBORIO);
+gen_trace_methods!(
+    is_autonomous => Trace::AUTONOMOUS,
+    is_teleop => Trace::TELEOP,
+    is_disabled => Trace::DISABLED,
+    is_test => Trace::TEST_MODE,
+    is_code_started => Trace::ROBOT_CODE,
+    is_connected => Trace::IS_ROBORIO
+);

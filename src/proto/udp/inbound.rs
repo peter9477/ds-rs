@@ -1,3 +1,5 @@
+use log::*;
+
 pub mod types;
 
 use self::types::*;
@@ -21,31 +23,44 @@ impl UdpResponsePacket {
     /// Attempts to decode a valid response packet from the given buffer
     /// Will return Err() if any of the reads fail.
     pub fn decode(buf: &mut (impl Buf + Clone)) -> Result<(UdpResponsePacket, usize)> {
+        let mut step = 0;
         let before = buf.clone();
+        // let text = format!("{}", hex::encode(before.bytes()));
+        // debug!("decode: {} {}", text.len() / 2, text);
 
         let res = (|| {
             let mut len = 0;
             let seqnum = buf.read_u16_be()?;
+            step = 1;
             len += 2;
 
             buf.read_u8()?; // Get rid of comm version
+            step = 2;
             len += 1;
 
             let status = Status::from_bits(buf.read_u8()?).unwrap();
+            step = 3;
             let trace = Trace::from_bits(buf.read_u8()?).unwrap();
+            step = 4;
             len += 2;
 
             let battery = {
                 let high = buf.read_u8()?;
+                step = 5;
                 let low = buf.read_u8()?;
+                step = 6;
                 f32::from(high) + f32::from(low) / 256f32
             };
             len += 2;
 
             let need_date = buf.read_u8()? == 1;
+            step = 7;
             len += 1;
 
             if let Ok(_tag_len) = buf.read_u8() {
+                step += 8;
+                // debug!("tag data {}", tag_len);
+
                 use crate::util::InboundTag;
                 while let Ok(tag_id) = buf.read_u8() {
                     len += 1;
@@ -59,7 +74,9 @@ impl UdpResponsePacket {
                             len += 4;
                         }
                         0x05 => {
+                            // debug!("chomp CPU {len} {}", hex::encode(buf.clone().bytes()));
                             types::tags::CPUInfo::chomp(buf)?;
+                            // debug!("chomped");
                             len += 1 + 4 * 4 * 2; // cpu count plus 4 32-bit words per cpu
                         }
                         0x06 => {
@@ -80,7 +97,15 @@ impl UdpResponsePacket {
                         }
                         _ => {}
                     }
+
+                    // if !buf.has_remaining() {
+                    //     debug!("no more bytes");
+                    //     break;
+                    // }
+                    // debug!("looping");
                 }
+
+                // debug!("done while loop");
             }
 
             Ok((
@@ -96,7 +121,7 @@ impl UdpResponsePacket {
         })();
 
         match res {
-            Err(ref _err) => {
+            Err(ref err) => {
                 // error!("decode: {:?} in {}", err, hex::encode(""));
                 // 0177 sequence
                 // 01   version (always 1 for now)
@@ -119,7 +144,7 @@ impl UdpResponsePacket {
                 // 0ac5
                 // 0102310bd700
                 // 220502 41a96d2b0000000000000000405f728841535a860000000000000000405cef45
-                // println!("decode: {err:?} at {step} in {}", hex::encode(before.bytes()));
+                error!("decode: {err:?} at {step} in {}", hex::encode(before.bytes()));
             }
             _ => {}
         }

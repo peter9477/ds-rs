@@ -26,4 +26,11 @@ macro_rules! gen_stub_tags {
 }
 
 // UDP tags should be eaten to ensure the pipe doesn't get clogged, but for now proper structs aren't implemented.
-gen_stub_tags!(PDPLog : 25, JoystickOutput : 8, DiskInfo : 4, CPUInfo : 20, RAMInfo : 8, Unknown : 9, CANMetrics : 14);
+gen_stub_tags!(PDPLog : 25,
+    JoystickOutput : 8,
+    DiskInfo : 8,
+    CPUInfo : 1 + 4 * 4 * 2,
+    RAMInfo : 8,
+    Unknown : 9,
+    CANMetrics : 14
+);

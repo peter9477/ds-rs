@@ -1,3 +1,5 @@
+use log::*;
+
 use super::Signal;
 
 use crate::proto::udp::inbound::UdpResponsePacket;
@@ -83,6 +85,7 @@ pub(crate) async fn udp_conn(
                     }
                     state.increment_seqnum();
                 }
+
                 // Action on signal from main task on UDP receive?
                 Either::Right(sig) => match sig {
                     Signal::NewTarget(ip) => {
@@ -99,6 +102,7 @@ pub(crate) async fn udp_conn(
                             .expect("Failed to connect to new target");
                         backoff.reset();
                     }
+
                     Signal::NewMode(mode) => {
                         if let DsMode::Simulation = mode {
                             let mut state = send_state.send().lock().await;
@@ -131,6 +135,7 @@ pub(crate) async fn udp_conn(
                 Ok(timeout_result) => match timeout_result {
                     Ok(packet) => {
                         if !connected {
+                            // println!("RIO responding");
                             connected = true;
                         }
                         let (packet, _): (UdpResponsePacket, _) = packet;
@@ -173,6 +178,7 @@ pub(crate) async fn udp_conn(
                     }
                     Err(e) => println!("Error decoding packet: {:?}", e),
                 },
+
                 Err(_) => {
                     if connected {
                         // println!("RIO disconnected");
@@ -181,10 +187,17 @@ pub(crate) async fn udp_conn(
                     }
                 }
             },
+
             // Internal signal to request various messages be sent.
             Either::Right(sig) => match sig {
-                Signal::Disconnect => return Ok(()),
+                Signal::Disconnect => {
+                    debug!("sig Disconnect");
+                    return Ok(());
+                }
+
                 Signal::NewTarget(ref target) => {
+                    debug!("sig NewTarget {:?}", target);
+
                     if let Some(ref tcp_tx) = tcp_tx {
                         let _ = tcp_tx.unbounded_send(Signal::Disconnect);
                         tcp_connected = false;
@@ -195,6 +208,8 @@ pub(crate) async fn udp_conn(
                     fwd_tx.unbounded_send(sig)?;
                 }
                 Signal::NewMode(mode) => {
+                    debug!("sig NewMode {:?}", mode);
+
                     let current_mode = *state.send().lock().await.ds_mode();
                     if mode != current_mode {
                         if let Some(ref tcp_tx) = tcp_tx {
